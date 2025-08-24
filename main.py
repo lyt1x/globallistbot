@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
 import asyncio
-import requests
 import json
 import aiohttp
 from colorama import init, Fore, Back, Style
@@ -18,7 +17,6 @@ Bot.remove_command('help')
 
 with open('token.txt', 'r') as g:
     token = g.read()
-print(token)
 
 @Bot.event
 async def on_ready():
@@ -41,22 +39,25 @@ async def self(interaction: discord.Interaction, level: str):
                 text = json.loads(await response.text())
                 level_id = text["data"][0]["level_id"]
         offset = 0
-        ping = ""
+        ping = ""; level_name = ""; placement = 0
         while True:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f'https://api.demonlist.org/records?level_id={level_id}&status=1&without_verifiers=true&offset={offset}&move_info=true',timeout=10) as response:
+                async with session.get(f'https://api.demonlist.org/records?level_id={level_id}&status=1&without_verifiers=false&offset={offset}&move_info=true',timeout=10) as response:
                     data = json.loads(await response.text())["data"]["records"]
                     with open('accounts.json', 'r') as f:
                         json_data = json.load(f)
                     if len(data) == 0:
                         break
+                    level_name = data[0]["level_name"]
+                    placement = data[0]["place"]
                     for i in data:
                         try:
-                            ping += f"<@{json_data[i["username"]]}>"
+                            if interaction.guild.get_member(int(json_data[i["username"]])) != None and int(i["percent"]) == 100:
+                                ping += f"<@{json_data[i["username"]]}>"
                         except Exception:
                             pass
                     offset += 50
-        await interaction.followup.send(f"Result: {ping}")
+        await interaction.followup.send(f"All victors of [{level_name} - #{placement}](https://demonlist.org/classic/{placement}) in the server: {ping}",suppress_embeds=True)
                 
     except asyncio.TimeoutError:
         error_msg = "❌ Сервер не ответил"
