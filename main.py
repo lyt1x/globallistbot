@@ -52,8 +52,8 @@ async def self(interaction: discord.Interaction, level: str):
                     placement = data[0]["place"]
                     for i in data:
                         try:
-                            if interaction.guild.get_member(int(json_data[i["username"]])) != None and int(i["percent"]) == 100:
-                                ping += f"<@{json_data[i["username"]]}>"
+                            if interaction.guild.get_member(int(json_data[str(i["user_id"])])) != None and int(i["percent"]) == 100:
+                                ping += f"<@{json_data[str(i["user_id"])]}>"
                         except Exception:
                             pass
                     offset += 50
